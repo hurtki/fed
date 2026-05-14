@@ -8,7 +8,7 @@ import (
 )
 
 type ThinkResult struct {
-	ShortText   string       `json:"short_text"`
+	Text        string       `json:"response"`
 	ShellAction *ShellAction `json:"shell_action"`
 }
 
@@ -18,13 +18,13 @@ You are a UNIX assistant.
 Return ONLY a valid JSON object. No markdown, no triple backticks.
 
 Structure if you want to execute some command:
-{"short_text": "...", "shell_action": {"command": "..."}}
+{"response": "...", "shell_action": {"bash_script": "..."}}
 
-command field should be a bash script without shebang.
-command will be executed using bash -c "command"
+bash_script field should be a bash script without shebang.
+bash_script will be executed using bash -c "command"
 
 Structure if you don't want to execute command:
-{"short_text": "..."}
+{"response": "..."}
 
 short_text field should describe in at least 2 sentences what you think right now
 

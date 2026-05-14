@@ -48,9 +48,9 @@ func (c *Chat) entry(ctx context.Context) {
 		return
 	}
 	c.Context.AddUserMessage(input)
-	fmt.Printf("%s: %s\n", time.Since(start).String(), res.ShortText)
+	fmt.Printf("%s: %s\n", time.Since(start).String(), res.Text)
 
-	c.Context.AddAgentThought(res.ShortText)
+	c.Context.AddAgentThought(res.Text)
 
 	if res.ShellAction != nil {
 		fmt.Printf("Want to execute?\n===\n %s\n===\ny/n:", res.ShellAction.Command)

@@ -1,5 +1,5 @@
 package chat
 
 type ShellAction struct {
-	Command string `json:"command"`
+	Command string `json:"bash_script"`
 }
