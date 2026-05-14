@@ -1,10 +1,10 @@
 package main
 
 import (
-	"context"
 	"log/slog"
 	"os"
 
+	"github.com/hurtki/fed/internal/chat"
 	"github.com/hurtki/fed/internal/config"
 	"github.com/hurtki/fed/internal/infrastructure/ollama"
 )
@@ -26,7 +26,8 @@ func main() {
 	}
 
 	cl := ollama.NewOllamaClient(ollamaCfg)
-	res, err := cl.Generate(context.Background(), "hi")
 	logger.Info("cfg", "model", ollamaCfg.Model)
-	logger.Info("generate", "res", res, "err", err)
+
+	chat := chat.NewChat(cl)
+	chat.Loop()
 }

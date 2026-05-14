@@ -14,8 +14,8 @@ type OllamaClient struct {
 	cfg config.OllamaConfig
 }
 
-func NewOllamaClient(cfg config.OllamaConfig) OllamaClient {
-	return OllamaClient{
+func NewOllamaClient(cfg config.OllamaConfig) *OllamaClient {
+	return &OllamaClient{
 		cfg: cfg,
 	}
 }
@@ -29,6 +29,7 @@ func (c *OllamaClient) Generate(ctx context.Context, prompt string) (string, err
 		err := json.NewEncoder(writer).Encode(GenerateRequest{
 			Model:  c.cfg.Model,
 			Prompt: prompt,
+			Stream: false,
 		})
 
 		if err != nil {
