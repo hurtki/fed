@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 type AI interface {
@@ -15,11 +16,15 @@ type AI interface {
 
 type Chat struct {
 	ai AI
+	Context
 }
 
 func NewChat(ai AI) *Chat {
 	return &Chat{
 		ai: ai,
+		Context: Context{
+			Messages: []string{},
+		},
 	}
 }
 
@@ -35,26 +40,44 @@ func (c *Chat) entry(ctx context.Context) {
 	input, _ := reader.ReadString('\n')
 	input = strings.TrimSpace(input)
 
-	res, err := c.Think(ctx, input)
+	start := time.Now()
+
+	res, err := c.Think(ctx, input, c.Context)
 	if err != nil {
 		fmt.Printf("error: %s\n", err.Error())
 		return
 	}
-	fmt.Printf("Thought: %s\n", res.ShortText)
-	fmt.Printf("Want to execute: %s?\n", res.ShellAction.Command)
-	reader = bufio.NewReader(os.Stdin)
-	input, _ = reader.ReadString('\n')
+	c.Context.AddUserMessage(input)
+	fmt.Printf("%s: %s\n", time.Since(start).String(), res.ShortText)
 
-	cmd := exec.Command(
-		strings.Split(res.ShellAction.Command, " ")[0],
-		strings.Split(res.ShellAction.Command, " ")[1:]...,
-	)
+	c.Context.AddAgentThought(res.ShortText)
 
-	out, err := cmd.Output()
-	if err != nil {
-		fmt.Printf("Error when executing: %s\n", err)
-		return
+	if res.ShellAction != nil {
+		fmt.Printf("Want to execute?\n===\n %s\n===\ny/n:", res.ShellAction.Command)
+		reader = bufio.NewReader(os.Stdin)
+		input, _ = reader.ReadString('\n')
+
+		if strings.Contains(input, "y") {
+			cmd := exec.Command(
+				"bash",
+				"-c",
+				res.ShellAction.Command,
+			)
+
+			outBytes, err := cmd.Output()
+			out := string(outBytes)
+
+			if err != nil {
+				if exitErr, ok := err.(*exec.ExitError); ok {
+					exitCode := exitErr.ExitCode()
+					out += fmt.Sprintf(" exit code: %d", exitCode)
+				} else {
+					out = err.Error()
+				}
+			}
+			fmt.Printf("\noutput:===\n%s\n===\n", string(out))
+			c.Context.AddShellOutput(res.ShellAction.Command, string(out))
+		}
+
 	}
-
-	fmt.Println(string(out))
 }
