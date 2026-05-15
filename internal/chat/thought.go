@@ -14,22 +14,29 @@ type ThinkResult struct {
 
 func (c *Chat) Think(ctx context.Context, prompt string, chatContext Context) (ThinkResult, error) {
 	formattedPrompt := fmt.Sprintf(`
-You are a UNIX assistant.
-Return ONLY a valid JSON object. No markdown, no triple backticks.
+======
+Chat Context: %s
+======
 
-Structure if you want to execute some command:
+You are an agent who can run bash scripts to help the user complete their task.
+Return ONLY a valid JSON object. No markdown, no triple backticks.
+Don't use line breaks, instead use \n symbols.
+
+Structure if you want to execute some script from current working directory of the user
 {"response": "...", "shell_action": {"bash_script": "..."}}
 
 bash_script field should be a bash script without shebang.
-bash_script will be executed using bash -c "command"
+It can be couple lines of bash code
+DON'T USE SUDO COMMAND
+DON'T write the same shell script in your text response
 
-Structure if you don't want to execute command:
+Structure if user is not asking for something or you need to get details about his request
+You can ask him about some details and then you will recieve his answer so you can
+create a better bash script
 {"response": "..."}
 
-short_text field should describe in at least 2 sentences what you think right now
-
-Chat Context: %s
-User input: %s`, chatContext.String(), prompt)
+User request: %s
+`, chatContext.String(), prompt)
 
 	res, err := c.ai.Generate(ctx, formattedPrompt)
 	if err != nil {

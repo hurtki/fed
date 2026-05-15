@@ -10,6 +10,9 @@ type Context struct {
 }
 
 func (c *Context) String() string {
+	if len(c.Messages) < 1 {
+		return "CONTEXT IS CLEAR"
+	}
 	return strings.Join(c.Messages, "\n")
 }
 
