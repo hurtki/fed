@@ -75,8 +75,8 @@ func (c *Chat) entry(ctx context.Context) {
 					out = err.Error()
 				}
 			}
-			fmt.Printf("\noutput:===\n%s\n===\n", string(out))
-			c.Context.AddShellOutput(res.ShellAction.Command, string(out))
+			fmt.Printf("\noutput:===\n%s\n===\n", out)
+			c.Context.AddShellOutput(res.ShellAction.Command, out)
 		}
 
 	}
