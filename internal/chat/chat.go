@@ -11,7 +11,7 @@ import (
 )
 
 type AI interface {
-	Generate(ctx context.Context, prompt string) (string, error)
+	GenerateJSON(ctx context.Context, prompt string) (string, error)
 }
 
 type Chat struct {

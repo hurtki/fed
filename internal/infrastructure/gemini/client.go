@@ -39,8 +39,13 @@ func NewGeminiAI(geminiToken string, modelName string) (*GeminiAI, error) {
 	}, nil
 }
 
-func (a *GeminiAI) Generate(ctx context.Context, prompt string) (string, error) {
-	res, err := a.cl.Models.GenerateContent(ctx, a.model.Name, genai.Text(prompt), nil)
+func (a *GeminiAI) GenerateJSON(ctx context.Context, prompt string) (string, error) {
+	var temp float32 = 0.1
+
+	res, err := a.cl.Models.GenerateContent(ctx, a.model.Name, genai.Text(prompt), &genai.GenerateContentConfig{
+		ResponseMIMEType: "application/json",
+		Temperature:      &temp,
+	})
 	if err != nil {
 		return "", fmt.Errorf("can't generate: %w", err)
 	}

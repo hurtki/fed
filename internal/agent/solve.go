@@ -23,14 +23,10 @@ func (a *Agent) SolveTask(ctx context.Context, task domain.Task) error {
 			return fmt.Errorf("one of task files is not reachable: %w", err)
 		}
 
-		fmt.Fprintf(&filesContext, `
-		<%s>
-		%s
-		</%s>
-		`, pf.Path, string(fData), pf.Path)
+		fmt.Fprintf(&filesContext, "<%s>%s</%s>", pf.Path, string(fData), pf.Path)
 	}
 
-	res, err := a.ai.Generate(ctx, fmt.Sprintf(`
+	res, err := a.ai.GenerateJSON(ctx, fmt.Sprintf(`
 <files_context>
 %s
 </files_context>
@@ -50,7 +46,7 @@ Execution criteria:
 
 Structure you need to give as output:
 {
-	"changes": [{"path": "./path", find": "", "replace": ""}, {"find": "", "replace": ""}]
+	"changes": [{"path": "./path", "find": "", "replace": ""}, {"find": "", "replace": ""}]
 }
 
 in changes, "path" should be one of file paths in given files_context
@@ -67,18 +63,11 @@ in changes, "replace" is what you want to insert instead of "find" part
 		return fmt.Errorf("can't generate using ai: %w", err)
 	}
 
-	cleanRes := strings.TrimSpace(res)
-	cleanRes = strings.TrimPrefix(cleanRes, "```json")
-	cleanRes = strings.TrimPrefix(cleanRes, "```")
-	cleanRes = strings.TrimSuffix(cleanRes, "```")
-	cleanRes = strings.TrimSpace(cleanRes)
-
 	resDto := TaskSolveResponse{}
 
-	err = json.Unmarshal([]byte(cleanRes), &resDto)
+	err = json.Unmarshal([]byte(res), &resDto)
 	if err != nil {
-		fmt.Println(cleanRes)
-		return fmt.Errorf("not valid response from ai")
+		return fmt.Errorf("not valid response from ai:[[[%s]]], json unmarshal error: %w", res, err)
 	}
 
 	for _, c := range resDto.Changes {

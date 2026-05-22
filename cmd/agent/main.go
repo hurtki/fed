@@ -33,13 +33,19 @@ func main() {
 	}
 
 	a := agent.NewAgent(cl)
+
+	proj := &domain.Project{BasePath: "/Users/hurtki/Projects/test/github-fetcher/"}
+
 	task := domain.Task{
-		Description: "delete http server logic, devide class should stay",
+		Description: "separate graphQL API calling logic from main.go to graphql.go. And add showcase in main.go of its usage",
 		Solved:      false,
 		Files: []domain.ProjectFile{
-			{Path: "./main.py", Project: &domain.Project{BasePath: "/Users/hurtki/tmp/"}},
+			{Path: "./main.go", Project: proj},
+			{Path: "./graphql.go", Project: proj},
 		},
 	}
+
 	err = a.SolveTask(context.Background(), task)
+
 	logger.Info("solved task", "err", err)
 }
