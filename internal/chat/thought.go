@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 )
 
 type ThinkResult struct {
@@ -51,19 +50,13 @@ create a better bash script
 </user_query>
 `, chatContext.String(), prompt)
 
-	res, err := c.ai.Generate(ctx, formattedPrompt)
+	res, err := c.ai.GenerateJSON(ctx, formattedPrompt)
 	if err != nil {
 		return ThinkResult{}, err
 	}
 
-	cleanRes := strings.TrimSpace(res)
-	cleanRes = strings.TrimPrefix(cleanRes, "```json")
-	cleanRes = strings.TrimPrefix(cleanRes, "```")
-	cleanRes = strings.TrimSuffix(cleanRes, "```")
-	cleanRes = strings.TrimSpace(cleanRes)
-
 	var dto ThinkResult
-	err = json.Unmarshal([]byte(cleanRes), &dto)
+	err = json.Unmarshal([]byte(res), &dto)
 	if err != nil {
 		return ThinkResult{}, fmt.Errorf("can't unmarshal ai response: %w. Raw: %s", err, res)
 	}

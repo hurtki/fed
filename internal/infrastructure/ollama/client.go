@@ -20,7 +20,7 @@ func NewOllamaClient(cfg config.OllamaConfig) *OllamaClient {
 	}
 }
 
-func (c *OllamaClient) Generate(ctx context.Context, prompt string) (string, error) {
+func (c *OllamaClient) GenerateJSON(ctx context.Context, prompt string) (string, error) {
 	reader, writer := io.Pipe()
 
 	go func() {
