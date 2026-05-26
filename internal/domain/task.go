@@ -10,16 +10,12 @@ func NewTaskTest(description string) (TaskTest, error) {
 
 type Task struct {
 	Description string
-	Solved      bool
 	Files       []ProjectFile
-	Tests       []TaskTest
 }
 
-func NewTask(description string, files []ProjectFile, tests []TaskTest) (Task, error) {
+func NewTask(description string, files []ProjectFile) (Task, error) {
 	return Task{
 		Description: description,
-		Solved:      false,
 		Files:       files,
-		Tests:       tests,
 	}, nil
 }

@@ -1,14 +1,19 @@
 package main
 
 import (
+	"bufio"
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/hurtki/fed/internal/agent"
 	"github.com/hurtki/fed/internal/config"
 	"github.com/hurtki/fed/internal/domain"
 	"github.com/hurtki/fed/internal/infrastructure/gemini"
+	cli_reporter "github.com/hurtki/fed/internal/reporter/cli"
 )
 
 func main() {
@@ -32,20 +37,22 @@ func main() {
 		logger.Error("can't initialize gemini", "err", err)
 	}
 
-	a := agent.NewAgent(cl)
+	reporter := cli_reporter.NewCLI(os.Stdout)
 
-	proj := &domain.Project{BasePath: "/Users/hurtki/Projects/test/github-fetcher/"}
+	absPath, _ := filepath.Abs("./")
 
-	task := domain.Task{
-		Description: "separate graphQL API calling logic from main.go to graphql.go. And add showcase in main.go of its usage",
-		Solved:      false,
-		Files: []domain.ProjectFile{
-			{Path: "./main.go", Project: proj},
-			{Path: "./graphql.go", Project: proj},
-		},
+	proj, err := domain.NewProject(absPath)
+
+	a := agent.NewAgent(cl, reporter, proj)
+
+	for {
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("->")
+		input, _ := reader.ReadString('\n')
+		input = strings.TrimSpace(input)
+
+		err = a.Prompt(context.Background(), input, nil)
+		logger.Info("Prompt executed", "err", err)
 	}
 
-	err = a.SolveTask(context.Background(), task)
-
-	logger.Info("solved task", "err", err)
 }
