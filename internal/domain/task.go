@@ -1,20 +1,12 @@
 package domain
 
-type TaskTest struct {
-	Description string
-}
-
-func NewTaskTest(description string) (TaskTest, error) {
-	return TaskTest{}, nil
-}
-
-type Task struct {
+type Step struct {
 	Description string
 	Files       []ProjectFile
 }
 
-func NewTask(description string, files []ProjectFile) (Task, error) {
-	return Task{
+func NewStep(description string, files []ProjectFile) (Step, error) {
+	return Step{
 		Description: description,
 		Files:       files,
 	}, nil
