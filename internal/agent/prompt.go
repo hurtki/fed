@@ -28,6 +28,9 @@ func (a *Agent) Prompt(ctx context.Context, msg string, opts *PromptOptions) err
 	} else {
 		a.reporter.Status("Thinking")
 	}
+	projectFilesText := strings.Join(projectFiles, "\n")
+
+	a.reporter.Log(fmt.Sprintf("got %d files in file tree of the project injected into context with their text length of %d symbols", len(projectFiles), len(projectFilesText)))
 
 	aiPrompt := fmt.Sprintf(`
 <files_in_project>
@@ -49,7 +52,7 @@ wanted files is what files you think you want to have in context to process user
 
 <user_request>
 %s
-</user_request>`, strings.Join(projectFiles, "\n"), msg)
+</user_request>`, projectFilesText, msg)
 
 	res, err := a.ai.GenerateJSON(ctx, aiPrompt)
 	if err != nil {

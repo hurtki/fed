@@ -24,14 +24,27 @@ func (t *ToolChain) RunFileChange(ch domain.FileChange) error {
 
 	replacedF := strings.Replace(string(f), ch.Find, ch.Replace, 1)
 
-	approved := t.approver.Approve(fmt.Sprintf(
-		`>>>>>> %s
+	eligible, err := t.fileRightsStorage.EligibleForEdit(ch.File)
+
+	if err != nil {
+		fmt.Printf("error when getting rights for file in rights storage: %s\n", err.Error())
+	}
+
+	if !eligible {
+		approved := t.approver.Approve(fmt.Sprintf(
+			`>>>>>> %s
 %s
 ====== %s
 %s`, ch.File.RelativePath, ch.Find, ch.File.RelativePath, ch.Replace))
 
-	if !approved {
-		return ErrUserDenied
+		if !approved {
+			return ErrUserDenied
+		}
+
+		err = t.fileRightsStorage.SetEligibleForEdit(ch.File)
+		if err != nil {
+			fmt.Printf("error when setting rights for file %s: %s", ch.File.GetAbsPath(), err.Error())
+		}
 	}
 
 	return overwriteFile(ch.File.GetAbsPath(), []byte(replacedF))
@@ -50,4 +63,21 @@ func overwriteFile(filepath string, newContent []byte) error {
 	}
 
 	return nil
+}
+
+func (t *ToolChain) ReadFile(pf domain.ProjectFile) ([]byte, error) {
+
+	eligible, _ := t.fileRightsStorage.EligibleForRead(pf)
+	if !eligible {
+		approved := t.approver.Approve(fmt.Sprintf("Read file: %s?", pf.GetAbsPath()))
+		if !approved {
+			return nil, ErrUserDenied
+		}
+		err := t.fileRightsStorage.SetEligibleForRead(pf)
+		if err != nil {
+			fmt.Printf("error when setting rights for file %s: %s", pf.GetAbsPath(), err.Error())
+		}
+	}
+
+	return os.ReadFile(pf.GetAbsPath())
 }

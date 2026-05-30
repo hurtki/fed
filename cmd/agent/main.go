@@ -14,6 +14,8 @@ import (
 	"github.com/hurtki/fed/internal/domain"
 	"github.com/hurtki/fed/internal/infrastructure/gemini"
 	cli_reporter "github.com/hurtki/fed/internal/reporter/cli"
+	"github.com/hurtki/fed/internal/storage"
+	"github.com/hurtki/fed/internal/tools"
 )
 
 func main() {
@@ -43,7 +45,11 @@ func main() {
 
 	proj, err := domain.NewProject(absPath)
 
-	a := agent.NewAgent(cl, reporter, proj)
+	fileRightsStorage := storage.NewMemoryFileRightsStorage()
+
+	toolchain := tools.NewToolChain(reporter, fileRightsStorage)
+
+	a := agent.NewAgent(cl, reporter, proj, toolchain)
 
 	for {
 		reader := bufio.NewReader(os.Stdin)

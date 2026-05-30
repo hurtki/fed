@@ -10,6 +10,11 @@ type AI interface {
 	GenerateJSON(ctx context.Context, prompt string) (string, error)
 }
 
+type ToolChain interface {
+	RunFileChange(ch domain.FileChange) error
+	ReadFile(f domain.ProjectFile) ([]byte, error)
+}
+
 type AgentReporter interface {
 	Status(message string)
 	Log(message string)
@@ -20,11 +25,12 @@ type AgentReporter interface {
 type Agent struct {
 	proj domain.Project
 
-	ai       AI
-	reporter AgentReporter
+	ai        AI
+	reporter  AgentReporter
+	toolchain ToolChain
 }
 
-func NewAgent(ai AI, reporter AgentReporter, proj domain.Project) Agent {
+func NewAgent(ai AI, reporter AgentReporter, proj domain.Project, toolChain ToolChain) Agent {
 	return Agent{
 		ai:       ai,
 		reporter: reporter,

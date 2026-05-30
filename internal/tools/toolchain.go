@@ -1,15 +1,27 @@
 package tools
 
+import "github.com/hurtki/fed/internal/domain"
+
 type Approver interface {
 	Approve(msg string) bool
 }
 
-type ToolChain struct {
-	approver Approver
+type FileRightsStorage interface {
+	EligibleForEdit(pf domain.ProjectFile) (bool, error)
+	EligibleForRead(pf domain.ProjectFile) (bool, error)
+
+	SetEligibleForEdit(pf domain.ProjectFile) error
+	SetEligibleForRead(pf domain.ProjectFile) error
 }
 
-func NewToolChain(approver Approver) *ToolChain {
+type ToolChain struct {
+	approver          Approver
+	fileRightsStorage FileRightsStorage
+}
+
+func NewToolChain(approver Approver, fileRightsStorage FileRightsStorage) *ToolChain {
 	return &ToolChain{
-		approver: approver,
+		approver:          approver,
+		fileRightsStorage: fileRightsStorage,
 	}
 }
