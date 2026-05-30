@@ -32,8 +32,9 @@ type Agent struct {
 
 func NewAgent(ai AI, reporter AgentReporter, proj domain.Project, toolChain ToolChain) Agent {
 	return Agent{
-		ai:       ai,
-		reporter: reporter,
-		proj:     proj,
+		ai:        ai,
+		reporter:  reporter,
+		proj:      proj,
+		toolchain: toolChain,
 	}
 }

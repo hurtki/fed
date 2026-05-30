@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/hurtki/fed/internal/domain"
 )
 
 const (
@@ -87,13 +89,27 @@ EditProject: %t
 Wanted files: %v
 	`, resDto.NotProject, resDto.DiscussProject, resDto.EditProject, resDto.WantedFiles))
 
+	projFiles := []domain.ProjectFile{}
+	for _, filePath := range resDto.WantedFiles {
+		pf, err := a.proj.NewFile(filePath)
+		if err != nil {
+			a.reporter.Log("not existing file from ai, skipping")
+			continue
+		}
+		projFiles = append(projFiles, pf)
+	}
+
+	if resDto.EditProject {
+		return a.EditProject(ctx, msg, projFiles)
+	}
+
 	return nil
 }
 
 func getFiles(root string) (res []string) {
 	_ = filepath.Walk(root, func(p string, info os.FileInfo, _ error) error {
 		if info != nil && !info.IsDir() {
-			res = append(res, p)
+			res = append(res, strings.TrimPrefix(p, root+"/"))
 		}
 		return nil
 	})

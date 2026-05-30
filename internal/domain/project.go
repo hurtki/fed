@@ -16,7 +16,7 @@ func NewProject(basePath string) (Project, error) {
 
 func (p Project) NewFile(relPath string) (ProjectFile, error) {
 	relPath = filepath.Clean(relPath)
-	if !strings.HasPrefix(relPath, "./") {
+	if strings.HasPrefix(relPath, "/") {
 		return ProjectFile{}, fmt.Errorf("%s is not a relative path", relPath)
 	}
 
