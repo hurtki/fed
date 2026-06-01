@@ -1,6 +1,9 @@
 package config
 
 import (
+	"bytes"
+	"os"
+
 	"github.com/DeanPDX/dotconfig"
 )
 
@@ -9,10 +12,17 @@ type GeminiConfig struct {
 	Model string `env:"GEMINI_MODEL,requried"`
 }
 
-func LoadGeminiConfig() (GeminiConfig, error) {
-	cfg, err := dotconfig.FromFileName[GeminiConfig](".env")
-	if err != nil {
-		return GeminiConfig{}, err
+func LoadGeminiConfigFromEnvFile(path string) (GeminiConfig, error) {
+	return dotconfig.FromFileName[GeminiConfig](path)
+}
+
+func LoadGeminiConfigFromEnvVariables() (GeminiConfig, error) {
+	var buf bytes.Buffer
+
+	for _, e := range os.Environ() {
+		buf.WriteString(e)
+		buf.WriteByte('\n')
 	}
-	return cfg, nil
+
+	return dotconfig.FromReader[GeminiConfig](&buf)
 }

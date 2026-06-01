@@ -1,3 +1,4 @@
+// same as ./cmd/agent/ but uses enviroment variables from enviroment, not .env file
 package main
 
 import (
@@ -28,7 +29,7 @@ func main() {
 		),
 	)
 
-	geminiCfg, err := config.LoadGeminiConfig()
+	geminiCfg, err := config.LoadGeminiConfigFromEnvFile(".env")
 	if err != nil {
 		logger.Error("can't initialize ollama config", "err", err)
 		return
