@@ -5,7 +5,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,33 +13,56 @@ import (
 	"github.com/hurtki/fed/internal/config"
 	"github.com/hurtki/fed/internal/domain"
 	"github.com/hurtki/fed/internal/infrastructure/gemini"
-	cli_reporter "github.com/hurtki/fed/internal/reporter/cli"
+	"github.com/hurtki/fed/internal/infrastructure/ollama"
 	"github.com/hurtki/fed/internal/storage"
 	"github.com/hurtki/fed/internal/tools"
+	cli_ui "github.com/hurtki/fed/internal/ui/cli"
 )
 
 func main() {
-	logger := slog.New(
-		slog.NewTextHandler(
-			os.Stdout,
-			&slog.HandlerOptions{
-				Level: slog.LevelDebug,
-			},
-		),
-	)
+	var ai agent.AI
 
-	geminiCfg, err := config.LoadGeminiConfigFromEnvFile(".env")
-	if err != nil {
-		logger.Error("can't initialize ollama config", "err", err)
+	cmdArgs := os.Args[1:]
+
+	envSrc := ""
+	switch len(cmdArgs) {
+	case 0:
+		envSrc = ".env"
+	case 1:
+		envSrc = cmdArgs[0]
+	default:
+		fmt.Println("too many args")
 		return
 	}
 
-	cl, err := gemini.NewGeminiAI(geminiCfg.Token, geminiCfg.Model)
-	if err != nil {
-		logger.Error("can't initialize gemini", "err", err)
+	fmt.Print("Chose llm to use(gemini,ollama):")
+
+	reader := bufio.NewReader(os.Stdin)
+	input, _ := reader.ReadString('\n')
+	input = strings.TrimSpace(input)
+
+	switch input {
+	case "gemini":
+		geminiCfg, err := config.LoadGeminiConfigFromEnvFile(envSrc)
+		if err != nil {
+			return
+		}
+
+		ai, err = gemini.NewGeminiAI(geminiCfg.Token, geminiCfg.Model)
+		if err != nil {
+		}
+	case "ollama":
+		ollamaCfg, err := config.LoadOllamaConfigFromEnvFile(envSrc)
+		if err != nil {
+			return
+		}
+
+		ai = ollama.NewOllamaClient(ollamaCfg)
+	default:
+		return
 	}
 
-	reporter := cli_reporter.NewCLI(os.Stdout)
+	ui := cli_ui.NewCLI(os.Stdout)
 
 	absPath, _ := filepath.Abs("./")
 
@@ -48,9 +70,9 @@ func main() {
 
 	fileRightsStorage := storage.NewMemoryFileRightsStorage()
 
-	toolchain := tools.NewToolChain(reporter, fileRightsStorage)
+	toolchain := tools.NewToolChain(ui, fileRightsStorage)
 
-	a := agent.NewAgent(cl, reporter, proj, toolchain)
+	a := agent.NewAgent(ai, ui, proj, toolchain)
 
 	for {
 		reader := bufio.NewReader(os.Stdin)
@@ -59,7 +81,11 @@ func main() {
 		input = strings.TrimSpace(input)
 
 		err = a.Prompt(context.Background(), input, nil)
-		logger.Info("Prompt executed", "err", err)
+		if err != nil {
+			ui.Result(false, fmt.Sprintf("error occured: %s", err.Error()))
+		} else {
+			ui.Result(true, "")
+		}
 	}
 
 }

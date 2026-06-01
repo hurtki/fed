@@ -18,8 +18,8 @@ type ToolChain interface {
 type AgentReporter interface {
 	Status(message string)
 	Log(message string)
-	Plan(plan domain.Plan)
-	Result(success bool, message string)
+	// Plan(plan domain.Plan)
+	// Result(success bool, message string)
 }
 
 type Agent struct {

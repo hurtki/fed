@@ -30,6 +30,7 @@ func (a *Agent) Prompt(ctx context.Context, msg string, opts *PromptOptions) err
 	} else {
 		a.reporter.Status("Thinking")
 	}
+
 	projectFilesText := strings.Join(projectFiles, "\n")
 
 	a.reporter.Log(fmt.Sprintf("got %d files in file tree of the project injected into context with their text length of %d symbols", len(projectFiles), len(projectFilesText)))

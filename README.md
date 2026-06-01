@@ -8,6 +8,8 @@
 
 ### Ready for now
 
+- Bash agent (scripts execution) is fully implemented and ready for use. Refer to the 'Bash scripts agent' section below for setup and execution instructions.
+
 ### Agent Implementation Details
 
 The `Agent` struct is the core component responsible for orchestrating AI-driven tasks. It relies on several interfaces to perform its operations:
@@ -31,5 +33,3 @@ To run agent using ollama:
 ```
 go run ./cmd/ollama/
 ```
-
-#### Code editing agent coming soon...

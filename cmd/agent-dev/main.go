@@ -14,9 +14,9 @@ import (
 	"github.com/hurtki/fed/internal/domain"
 	"github.com/hurtki/fed/internal/infrastructure/gemini"
 	"github.com/hurtki/fed/internal/infrastructure/ollama"
-	cli_reporter "github.com/hurtki/fed/internal/reporter/cli"
 	"github.com/hurtki/fed/internal/storage"
 	"github.com/hurtki/fed/internal/tools"
+	cli_ui "github.com/hurtki/fed/internal/ui/cli"
 )
 
 func main() {
@@ -79,7 +79,7 @@ func main() {
 		return
 	}
 
-	reporter := cli_reporter.NewCLI(os.Stdout)
+	reporter := cli_ui.NewCLI(os.Stdout)
 
 	absPath, _ := filepath.Abs("./")
 
