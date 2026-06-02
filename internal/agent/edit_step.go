@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/hurtki/fed/internal/domain"
@@ -124,38 +122,4 @@ type TaskChange struct {
 	Path    string `json:"path"`
 	Find    string `json:"find"`
 	Replace string `json:"replace"`
-}
-
-func applyTaskChange(proj domain.Project, ch TaskChange) error {
-	path := filepath.Join(proj.BasePath, ch.Path)
-
-	f, err := os.ReadFile(path)
-	if err != nil {
-		return fmt.Errorf("can't read file in task change: %w", err)
-	}
-
-	findCount := strings.Count(string(f), ch.Find)
-
-	if findCount != 1 {
-		return fmt.Errorf("%d find blocks in given change", findCount)
-	}
-
-	replacedF := strings.Replace(string(f), ch.Find, ch.Replace, 1)
-
-	return overwriteFile(path, []byte(replacedF))
-}
-
-func overwriteFile(filepath string, newContent []byte) error {
-	file, err := os.OpenFile(filepath, os.O_WRONLY|os.O_TRUNC, 0666)
-	if err != nil {
-		return fmt.Errorf("can't open file: %w", err)
-	}
-	defer file.Close()
-
-	_, err = file.Write(newContent)
-	if err != nil {
-		return fmt.Errorf("write error: %w", err)
-	}
-
-	return nil
 }
