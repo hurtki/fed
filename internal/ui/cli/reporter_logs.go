@@ -3,7 +3,7 @@ package cli_ui
 import (
 	"bufio"
 	"fmt"
-	"io"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -11,33 +11,34 @@ import (
 )
 
 type CLILogs struct {
-	w io.Writer
+	logger *slog.Logger
 }
 
-func NewCLILogs(w io.Writer) *CLILogs {
+func NewCLILogs(logger *slog.Logger) *CLILogs {
 	return &CLILogs{
-		w: w,
+		logger: logger,
 	}
 }
 
 func (c *CLILogs) Status(message string) {
-	fmt.Fprintf(c.w, "Thought: %s\n", message)
+	c.logger.Info("Status", "message", message)
 }
 
 func (c *CLILogs) Log(message string) {
-	fmt.Fprintf(c.w, "Log: %s\n", message)
+	c.logger.Info("Log", "message", message)
 }
 
 func (c *CLILogs) Plan(plan domain.Plan) {
-	fmt.Fprintf(c.w, "Presented a plan")
+	c.logger.Info("Plan", "plan", plan, "status", "not implemented domain model")
 }
 
 func (c *CLILogs) Result(success bool, message string) {
-	fmt.Fprintf(c.w, "result, success: %t", success)
+	c.logger.Info("rseult", "success", success, "message", message)
 }
 
 func (c *CLILogs) Approve(message string) bool {
-	fmt.Fprintf(c.w, "%s\nApprove y/n:", message)
+	c.logger.Info("Approve", "message", message)
+	fmt.Print("Approve y/n:")
 
 	reader := bufio.NewReader(os.Stdin)
 	input, _ := reader.ReadString('\n')

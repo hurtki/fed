@@ -79,7 +79,7 @@ func main() {
 		return
 	}
 
-	reporter := cli_ui.NewCLI(os.Stdout)
+	reporter := cli_ui.NewCLILogs(logger)
 
 	absPath, _ := filepath.Abs("./")
 
