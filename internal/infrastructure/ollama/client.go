@@ -27,9 +27,11 @@ func (c *OllamaClient) GenerateJSON(ctx context.Context, prompt string) (string,
 		defer writer.Close()
 
 		err := json.NewEncoder(writer).Encode(GenerateRequest{
-			Model:  c.cfg.Model,
-			Prompt: prompt,
-			Stream: false,
+			Model:   c.cfg.Model,
+			Prompt:  prompt,
+			Stream:  false,
+			Format:  "json",
+			Options: GenerateRequestOptions{Temperature: 0.0},
 		})
 
 		if err != nil {
