@@ -2,6 +2,7 @@ package cli_ui
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -20,7 +21,6 @@ type CLI struct {
 }
 
 func NewCLI(w io.Writer) *CLI {
-	// Создаем спиннер сразу с привязкой к переданному io.Writer
 	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond, spinner.WithWriter(w))
 
 	return &CLI{
@@ -33,10 +33,11 @@ func (c *CLI) Status(message string) {
 	c.m.Lock()
 	defer c.m.Unlock()
 
-	c.s.Stop()
+	if c.s.Active() {
+		c.s.Stop()
+	}
 
-	// Используем цветной вывод с учетом нашего io.Writer
-	color.New(color.FgGreen).Fprintln(c.w, message)
+	color.RGB(95, 180, 156).Fprintf(c.w, "└->%s\n", message)
 
 	c.s.Start()
 }
@@ -45,56 +46,76 @@ func (c *CLI) Log(message string) {
 	c.m.Lock()
 	defer c.m.Unlock()
 
-	c.s.Stop()
-	color.New(color.FgWhite).Fprintf(c.w, "Log: %s\n", message)
-	c.s.Start()
+	wasActive := c.s.Active()
+	if wasActive {
+		c.s.Stop()
+	}
+
+	color.RGB(222, 239, 183).Fprintf(c.w, "%s\n", message)
+
+	if wasActive {
+		c.s.Start()
+	}
 }
 
 func (c *CLI) Plan(plan domain.Plan) {
 	c.m.Lock()
 	defer c.m.Unlock()
 
-	c.s.Stop()
+	if c.s.Active() {
+		c.s.Stop()
+	}
+
 	color.New(color.FgBlue).Fprintln(c.w, "Presented a plan, not implemented in internal/ui/cli")
-	c.s.Start() // Не забываем вернуть спиннер, если нужно
 }
 
 func (c *CLI) Result(success bool, message string) {
 	c.m.Lock()
 	defer c.m.Unlock()
 
-	c.s.Stop()
+	if c.s.Active() {
+		c.s.Stop()
+	}
 
 	if success {
 		if message != "" {
-			color.New(color.FgGreen).Fprintf(c.w, "success: %s\n", message)
+			color.RGB(65, 66, 136).Fprintf(c.w, "✓ success: %s\n", message)
 		} else {
-			color.New(color.FgGreen).Fprintln(c.w, "success")
+			color.RGB(65, 66, 136).Fprintln(c.w, "✓ success")
 		}
 	} else {
 		if message != "" {
-			color.New(color.FgRed).Fprintf(c.w, "failure: %s\n", message)
+			color.RGB(104, 45, 99).Fprintf(c.w, "✗ failure: %s\n", message)
 		} else {
-			color.New(color.FgRed).Fprintln(c.w, "failure")
+			color.RGB(104, 45, 99).Fprintln(c.w, "✗ failure")
 		}
 	}
 }
 
 func (c *CLI) Approve(message string) bool {
-	// 1. Сначала останавливаем спиннер под мьютексом
-	c.m.Lock()
 	c.s.Stop()
-	color.New(color.FgRed).Fprintf(c.w, "%s\nApprove y/n: ", message)
-	c.m.Unlock() // Обязательно отпускаем мьютекс ПЕРЕД чтением из консоли!
 
-	// 2. Спокойно ждем ввода от пользователя (мьютекс свободен, другие горутины не зависнут)
+	color.New(color.FgYellow).Fprintf(c.w, "⚠  %s \n[y/N]->: ", message)
+
 	reader := bufio.NewReader(os.Stdin)
 	input, err := reader.ReadString('\n')
 	if err != nil {
 		return false
 	}
 
-	// 3. Более надежная валидация ответа
 	input = strings.TrimSpace(strings.ToLower(input))
-	return input == "y" || input == "yes"
+	isApproved := input == "y" || input == "yes"
+
+	c.DeleteLastLines(strings.Count(message, "\n") + 2)
+
+	c.s.Start()
+	return isApproved
+}
+
+func (c *CLI) DeleteLastLines(n int) {
+	if n <= 0 {
+		return
+	}
+	seq := strings.Repeat("\x1b[1A\x1b[2K", n)
+	fmt.Fprint(c.w, seq)
 }

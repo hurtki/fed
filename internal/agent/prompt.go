@@ -21,15 +21,7 @@ type PromptOptions struct {
 
 func (a *Agent) Prompt(ctx context.Context, msg string, opts *PromptOptions) error {
 	projectFiles := getFiles(a.proj.BasePath)
-	if len(projectFiles) > maxProjectsFiles {
-		a.reporter.Log(
-			fmt.Sprintf("too many files in project: %d ( should be lower than %d)",
-				len(projectFiles), maxProjectsFiles),
-		)
-		a.reporter.Status("Thinking without project context")
-	} else {
-		a.reporter.Status("Thinking")
-	}
+	a.reporter.Status("Thinking")
 
 	projectFilesText := strings.Join(projectFiles, "\n")
 
@@ -51,6 +43,7 @@ wanted files is what files you think you want to have in context to answer user'
 3. Edit Project
 your output: {"edit_project": true, "wanted_files": ["", ""]}
 wanted files is what files you think you want to have in context to process user's request
+Don't be afraid to take a lot of files into context, the more files, the better the answer.
 </task_definition>
 
 <user_request>
@@ -82,14 +75,6 @@ wanted files is what files you think you want to have in context to process user
 		return fmt.Errorf("AI couldn't recover from json unmarshaling issue")
 	}
 
-	a.reporter.Log(fmt.Sprintf(`
-NotProject: %t
-DiscussProject: %t
-EditProject: %t
-
-Wanted files: %v
-	`, resDto.NotProject, resDto.DiscussProject, resDto.EditProject, resDto.WantedFiles))
-
 	projFiles := []domain.ProjectFile{}
 	for _, filePath := range resDto.WantedFiles {
 		pf, err := a.proj.NewFile(filePath)
@@ -100,9 +85,15 @@ Wanted files: %v
 		projFiles = append(projFiles, pf)
 	}
 
-	if resDto.EditProject {
+	switch {
+	case resDto.NotProject:
+		a.reporter.Log("Not connected to project request( not implemented agent logic )")
+	case resDto.DiscussProject:
+		a.reporter.Log("Connected to project 'discuss' request ( not implemented agent logic )")
+	case resDto.EditProject:
 		return a.EditProject(ctx, msg, projFiles)
 	}
+	a.reporter.Log(fmt.Sprint(resDto.NotProject, resDto.DiscussProject, resDto.EditProject))
 
 	return nil
 }
@@ -110,7 +101,13 @@ Wanted files: %v
 func getFiles(root string) (res []string) {
 	_ = filepath.Walk(root, func(p string, info os.FileInfo, _ error) error {
 		if info != nil && !info.IsDir() {
-			res = append(res, strings.TrimPrefix(p, root+"/"))
+			// cut from abs path to relative path
+			p = strings.TrimPrefix(p, root+"/")
+
+			if strings.HasPrefix(p, ".git") {
+				return nil
+			}
+			res = append(res, p)
 		}
 		return nil
 	})

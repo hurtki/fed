@@ -8,6 +8,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	github.com/DeanPDX/dotconfig v1.0.2 // indirect
 	github.com/briandowns/spinner v1.23.2 // indirect
+	github.com/buger/goterm v1.0.4 // indirect
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/go-cmp v0.6.0 // indirect

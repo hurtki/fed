@@ -103,6 +103,14 @@ in changes, "replace" is what you want to insert instead of "find" part
 				return fmt.Errorf("user decieded not to edit file")
 			}
 		}
+
+		findLinesCount := strings.Count(change.Find, "\n")
+		replaceLinesCount := strings.Count(change.Replace, "\n")
+		if findLinesCount > replaceLinesCount {
+			a.reporter.Log(fmt.Sprintf("edited %s, %d lines deleted", change.File.RelativePath, findLinesCount-replaceLinesCount))
+		} else {
+			a.reporter.Log(fmt.Sprintf("edited %s, %d lines added", change.File.RelativePath, replaceLinesCount-findLinesCount))
+		}
 	}
 
 	return nil

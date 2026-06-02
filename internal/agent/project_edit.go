@@ -90,7 +90,7 @@ Your output should be valid JSON with this structure
 		if err != nil {
 			return fmt.Errorf("can't create step: %w", err)
 		}
-		a.reporter.Status(fmt.Sprintf("working on step %d", i+1))
+		a.reporter.Status(fmt.Sprintf("working on step %d: %s", i+1, step.Description))
 		err = a.editStep(ctx, step)
 		if err != nil {
 			return fmt.Errorf("step exited with error: %w", err)
