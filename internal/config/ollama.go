@@ -1,7 +1,8 @@
 package config
 
 import (
-	"strings"
+	"bytes"
+	"os"
 
 	"github.com/DeanPDX/dotconfig"
 )
@@ -11,11 +12,17 @@ type OllamaConfig struct {
 	Model    string `env:"OLLAMA_MODEL,requried"`
 }
 
-func LoadOllamaConfig() (OllamaConfig, error) {
-	cfg, err := dotconfig.FromFileName[OllamaConfig](".env")
-	if err != nil {
-		return OllamaConfig{}, err
+func LoadOllamaConfigFromEnvFile(path string) (OllamaConfig, error) {
+	return dotconfig.FromFileName[OllamaConfig](path)
+}
+
+func LoadOllamaConfigFromEnvVariables() (OllamaConfig, error) {
+	var buf bytes.Buffer
+
+	for _, e := range os.Environ() {
+		buf.WriteString(e)
+		buf.WriteByte('\n')
 	}
-	cfg.Endpoint = strings.TrimSuffix(cfg.Endpoint, "/")
-	return cfg, nil
+
+	return dotconfig.FromReader[OllamaConfig](&buf)
 }
