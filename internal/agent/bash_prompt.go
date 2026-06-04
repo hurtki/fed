@@ -1,18 +1,7 @@
-package chat
+package agent
 
-import (
-	"context"
-	"encoding/json"
-	"fmt"
-)
-
-type ThinkResult struct {
-	Text        string       `json:"response"`
-	ShellAction *ShellAction `json:"shell_action"`
-}
-
-func (c *Chat) Think(ctx context.Context, prompt string, chatContext Context) (ThinkResult, error) {
-	formattedPrompt := fmt.Sprintf(`
+/*
+`
 <context>
 Chat Context: %s
 </context>
@@ -48,18 +37,6 @@ create a better bash script
 <user_query>
 %s
 </user_query>
-`, chatContext.String(), prompt)
+`
 
-	res, err := c.ai.GenerateJSON(ctx, formattedPrompt)
-	if err != nil {
-		return ThinkResult{}, err
-	}
-
-	var dto ThinkResult
-	err = json.Unmarshal([]byte(res), &dto)
-	if err != nil {
-		return ThinkResult{}, fmt.Errorf("can't unmarshal ai response: %w. Raw: %s", err, res)
-	}
-
-	return dto, nil
-}
+*/

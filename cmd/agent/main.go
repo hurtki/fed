@@ -1,13 +1,12 @@
-// same as ./cmd/agent/ but uses enviroment variables from enviroment, not .env file
 package main
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
-	"strings"
+	"syscall"
 
 	"github.com/hurtki/fed/internal/agent"
 	"github.com/hurtki/fed/internal/config"
@@ -20,6 +19,8 @@ import (
 )
 
 func main() {
+	ui := cli_ui.NewCLI(os.Stdout, cli_ui.NewNeonCLIPalette())
+
 	var ai agent.AI
 
 	cmdArgs := os.Args[1:]
@@ -35,13 +36,9 @@ func main() {
 		return
 	}
 
-	fmt.Print("Chose llm to use(gemini,ollama):")
+	llmName := ui.RequestMulLines("Chose llm to use(gemini,ollama):")
 
-	reader := bufio.NewReader(os.Stdin)
-	input, _ := reader.ReadString('\n')
-	input = strings.TrimSpace(input)
-
-	switch input {
+	switch llmName {
 	case "gemini":
 		geminiCfg, err := config.LoadGeminiConfigFromEnvFile(envSrc)
 		if err != nil {
@@ -62,8 +59,6 @@ func main() {
 		return
 	}
 
-	ui := cli_ui.NewCLI(os.Stdout)
-
 	absPath, _ := filepath.Abs("./")
 
 	proj, err := domain.NewProject(absPath)
@@ -74,11 +69,18 @@ func main() {
 
 	a := agent.NewAgent(ai, ui, proj, toolchain)
 
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-sigChan
+		os.Exit(0)
+	}()
+
 	for {
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Print("->")
-		input, _ := reader.ReadString('\n')
-		input = strings.TrimSpace(input)
+		input := ui.RequestMulLines("->")
+		if input == "" {
+			return
+		}
 
 		err = a.Prompt(context.Background(), input, nil)
 		if err != nil {
