@@ -9,7 +9,7 @@ Fed is an AI-driven agent designed to assist with coding, refactoring, and execu
 The core of the project is the `Agent` struct, which orchestrates tasks using several key interfaces:
 
 - **`AI`**: Interacts with the underlying LLM (Gemini or Ollama) to generate structured JSON responses from prompts.
-- **`ToolChain`**: Provides tools for the agent to interact with the environment. It includes functionalities like `RunFileChange` and `ReadFile` to safely read and modify project files, and bash script execution.
+- **`ToolChain`**: Provides tools for the agent to interact with the environment. It includes functionalities like `RunFileChange` and `ReadFile` to safely read and modify project files.
 - **`AgentReporter`**: Handles reporting the agent's status, logging messages, and communicating the results of its operations to the user.
 
 ### Integrations
@@ -22,13 +22,11 @@ The core of the project is the `Agent` struct, which orchestrates tasks using se
 1. **Chat Loop**: The agent runs in a continuous loop, waiting for user input via the CLI.
 2. **Planning & Thinking**: Upon receiving a prompt, the agent analyzes the context (project files, chat history) and generates a plan or a direct response.
 3. **File Editing**: If the task involves code changes, the agent generates a search/replace patch. The `ToolChain` checks file rights and prompts the user for approval before applying any changes.
-4. **Bash Execution**: The agent can propose bash commands to execute. The user is prompted to approve the execution, and the output is fed back into the chat context.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Go 1.26 or higher
 - An API key for Gemini OR a running local instance of Ollama
 
 ### Configuration
@@ -41,20 +39,53 @@ The core of the project is the `Agent` struct, which orchestrates tasks using se
    - For **Ollama**: Set `OLLAMA_ENDPOINT` and `OLLAMA_MODEL`.
    - For **Gemini**: Set `GEMINI_TOKEN` and `GEMINI_MODEL`.
 
-### Building and Running
+### Installation
 
-You can run the agent directly using Go. The agent will prompt you to choose which LLM to use (`gemini` or `ollama`).
+There are always pre-built binaries in [releases](https://github.com/hurtki/fed/releases)
 
-**Run the standard agent:**
+#### Oneliners for UNIX-like systems
 
-```bash
-go run ./cmd/agent/
+### Linux (x86_64 / AMD64)
+
+```
+curl -L https://github.com/hurtki/fed/releases/latest/download/fed-linux-amd64 -o fed
+chmod +x fed
+sudo mv fed /usr/local/bin/
 ```
 
-**Run the development agent (with debug logging):**
+### macOS Intel
 
-```bash
-go run ./cmd/agent-dev/
+```
+curl -L https://github.com/hurtki/fed/releases/latest/download/fed-darwin-amd64 -o fed
+chmod +x fed
+sudo mv fed /usr/local/bin/
 ```
 
-Once started, type your prompt at the `->` indicator to interact with the agent.
+### Linux ARM64
+
+```
+curl -L https://github.com/hurtki/fed/releases/latest/download/fed-linux-arm64 -o fed
+chmod +x fed
+sudo mv fed /usr/local/bin/
+```
+
+### macOS Apple Silicon(ARM)
+
+```
+curl -L https://github.com/hurtki/fed/releases/latest/download/fed-darwin-arm64 -o fed
+chmod +x fed
+sudo mv fed /usr/local/bin/
+```
+
+## Usage
+
+To start the agent, run the `fed` command. You can optionally pass a path to a custom environment file (defaults to `.env`):
+
+```bash
+fed [path_to_env_file]
+```
+
+Upon startup, the CLI will guide you through the following interactive steps:
+
+1. **LLM Selection**: You will be prompted to choose which LLM provider to use (`gemini` or `ollama`).
+2. **Interactive Chat Loop**: Once initialized, the agent enters a continuous loop, prompting you with `->` for input. You can type your instructions or queries (supporting multi-line input). To submit your input, press **Tab** or press **Enter twice in a row**. To exit, simply press Enter on an empty prompt.
