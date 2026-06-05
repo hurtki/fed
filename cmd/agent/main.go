@@ -18,6 +18,12 @@ import (
 	cli_ui "github.com/hurtki/fed/internal/ui/cli"
 )
 
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
 func main() {
 	ui := cli_ui.NewCLI(os.Stdout, cli_ui.NewNeonCLIPalette())
 
@@ -36,7 +42,7 @@ func main() {
 		return
 	}
 
-	llmName := ui.RequestMulLines("Chose llm to use(gemini,ollama):")
+	llmName := ui.RequestMulLines(fmt.Sprintf("fed %s: Chose llm to use(gemini,ollama):", version))
 
 	switch llmName {
 	case "gemini":
