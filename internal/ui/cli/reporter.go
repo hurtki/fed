@@ -124,6 +124,11 @@ func (c *CLI) deleteLastLines(n int) {
 	seq := strings.Repeat("\x1b[1A\x1b[2K", n)
 	fmt.Fprint(c.w, seq)
 }
+
+func (c *CLI) FormatDiff(path, find, replace string) string {
+	return c.palette.FormatDiff(path, find, replace)
+}
+
 func (c *CLI) RequestMulLines(prompt string) string {
 	c.m.Lock()
 	defer c.m.Unlock()

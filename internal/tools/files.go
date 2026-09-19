@@ -31,11 +31,7 @@ func (t *ToolChain) RunFileChange(ch domain.FileChange) error {
 	}
 
 	if !eligible {
-		approved := t.approver.Approve(fmt.Sprintf(
-			`>>>>>> %s
-%s
-====== %s
-%s`, ch.File.RelativePath, ch.Find, ch.File.RelativePath, ch.Replace))
+		approved := t.approver.Approve(strings.TrimSuffix(t.approver.FormatDiff(ch.File.RelativePath, ch.Find, ch.Replace), "\n"))
 
 		if !approved {
 			return ErrUserDenied
@@ -48,6 +44,51 @@ func (t *ToolChain) RunFileChange(ch domain.FileChange) error {
 	}
 
 	return overwriteFile(ch.File.GetAbsPath(), []byte(replacedF))
+}
+
+func (t *ToolChain) RunFileChanges(changes []domain.FileChange) error {
+	if len(changes) == 0 {
+		return nil
+	}
+
+	var needsApproval bool
+	for _, ch := range changes {
+		eligible, err := t.fileRightsStorage.EligibleForEdit(ch.File)
+		if err != nil {
+			fmt.Printf("error when getting rights for file in rights storage: %s\n", err.Error())
+		}
+		if !eligible {
+			needsApproval = true
+			break
+		}
+	}
+
+	if needsApproval {
+		var prompt strings.Builder
+		for _, ch := range changes {
+			prompt.WriteString(t.approver.FormatDiff(ch.File.RelativePath, ch.Find, ch.Replace))
+		}
+
+		approved := t.approver.Approve(strings.TrimSuffix(prompt.String(), "\n"))
+		if !approved {
+			return ErrUserDenied
+		}
+
+		for _, ch := range changes {
+			err := t.fileRightsStorage.SetEligibleForEdit(ch.File)
+			if err != nil {
+				fmt.Printf("error when setting rights for file %s: %s\n", ch.File.GetAbsPath(), err.Error())
+			}
+		}
+	}
+
+	for _, ch := range changes {
+		if err := t.RunFileChange(ch); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func overwriteFile(filepath string, newContent []byte) error {

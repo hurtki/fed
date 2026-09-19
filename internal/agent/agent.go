@@ -12,6 +12,7 @@ type AI interface {
 
 type ToolChain interface {
 	RunFileChange(ch domain.FileChange) error
+	RunFileChanges(changes []domain.FileChange) error
 	ReadFile(f domain.ProjectFile) ([]byte, error)
 }
 

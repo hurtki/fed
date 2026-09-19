@@ -93,21 +93,29 @@ in changes, "replace" is what you want to insert instead of "find" part
 		}
 	}
 
+	var changes []domain.FileChange
 	for _, c := range resDto.Changes {
-		change := pfs[c.Path].NewChange(c.Find, c.Replace)
-		err = a.toolchain.RunFileChange(change)
-		if err != nil {
-			if errors.Is(err, tools.ErrUserDenied) {
-				return fmt.Errorf("user decieded not to edit file")
-			}
-		}
+		changes = append(changes, pfs[c.Path].NewChange(c.Find, c.Replace))
+	}
 
+	err = a.toolchain.RunFileChanges(changes)
+	if err != nil {
+		if errors.Is(err, tools.ErrUserDenied) {
+			return fmt.Errorf("user decieded not to edit file")
+		}
+		return err
+	}
+
+	for _, change := range changes {
 		findLinesCount := strings.Count(change.Find, "\n")
 		replaceLinesCount := strings.Count(change.Replace, "\n")
-		if findLinesCount > replaceLinesCount {
+		switch {
+		case findLinesCount > replaceLinesCount:
 			a.reporter.Log(fmt.Sprintf("edited %s, %d lines deleted", change.File.RelativePath, findLinesCount-replaceLinesCount))
-		} else {
+		case replaceLinesCount > findLinesCount:
 			a.reporter.Log(fmt.Sprintf("edited %s, %d lines added", change.File.RelativePath, replaceLinesCount-findLinesCount))
+		case replaceLinesCount == findLinesCount:
+			a.reporter.Log(fmt.Sprintf("edited %s, %d lines edited", change.File.RelativePath, replaceLinesCount))
 		}
 	}
 

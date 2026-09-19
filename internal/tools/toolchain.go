@@ -2,8 +2,13 @@ package tools
 
 import "github.com/hurtki/fed/internal/domain"
 
+type DiffFormatter interface {
+	FormatDiff(path, find, replace string) string
+}
+
 type Approver interface {
 	Approve(msg string) bool
+	DiffFormatter
 }
 
 type FileRightsStorage interface {

@@ -1,6 +1,11 @@
 package cli_ui
 
-import "github.com/fatih/color"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/fatih/color"
+)
 
 type CLIPalette struct {
 	Status          *color.Color
@@ -10,6 +15,8 @@ type CLIPalette struct {
 	ResultFailure   *color.Color
 	Approve         *color.Color
 	RequestMulLines *color.Color
+	DiffRemoved     *color.Color
+	DiffAdded       *color.Color
 }
 
 func NewChillCLIPalette() CLIPalette {
@@ -24,6 +31,8 @@ func NewChillCLIPalette() CLIPalette {
 		ResultFailure: color.RGB(142, 59, 70), // burnt-rose
 
 		RequestMulLines: color.RGB(224, 119, 125), // light-coral
+		DiffRemoved:     color.RGB(200, 70, 70),   // soft red
+		DiffAdded:       color.RGB(80, 160, 100),  // soft green
 	}
 }
 
@@ -39,6 +48,8 @@ func NewWarmCLIPalette() CLIPalette {
 		ResultFailure: color.RGB(178, 34, 34), // firebrick
 
 		RequestMulLines: color.RGB(255, 99, 71), // tomato
+		DiffRemoved:     color.RGB(220, 20, 60),  // crimson
+		DiffAdded:       color.RGB(50, 205, 50),  // lime green
 	}
 }
 
@@ -54,6 +65,8 @@ func NewNeonCLIPalette() CLIPalette {
 		ResultFailure: color.RGB(255, 7, 58), // neon red
 
 		RequestMulLines: color.RGB(255, 20, 147), // deep pink
+		DiffRemoved:     color.RGB(255, 0, 0),    // neon red
+		DiffAdded:       color.RGB(0, 255, 0),    // neon green
 	}
 }
 
@@ -69,5 +82,28 @@ func NewMonochromeCLIPalette() CLIPalette {
 		ResultFailure: color.RGB(105, 105, 105), // dim gray
 
 		RequestMulLines: color.RGB(128, 128, 128), // gray
+		DiffRemoved:     color.RGB(160, 160, 160), // gray
+		DiffAdded:       color.RGB(255, 255, 255), // white
 	}
+}
+
+func (p CLIPalette) FormatDiff(path, find, replace string) string {
+	var b strings.Builder
+	fmt.Fprintf(&b, ">>>>>> %s\n", path)
+	for _, line := range strings.Split(find, "\n") {
+		if p.DiffRemoved != nil {
+			b.WriteString(p.DiffRemoved.Sprintf("- %s\n", line))
+		} else {
+			fmt.Fprintf(&b, "- %s\n", line)
+		}
+	}
+	fmt.Fprintf(&b, "====== %s\n", path)
+	for _, line := range strings.Split(replace, "\n") {
+		if p.DiffAdded != nil {
+			b.WriteString(p.DiffAdded.Sprintf("+ %s\n", line))
+		} else {
+			fmt.Fprintf(&b, "+ %s\n", line)
+		}
+	}
+	return b.String()
 }
